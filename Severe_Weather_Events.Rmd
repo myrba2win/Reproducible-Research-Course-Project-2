@@ -1,0 +1,150 @@
+---
+title: "Reproducible Research / NOOA - Severe Weather Events"
+author: "Myrba"
+date: "26/9/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### **Assignment: Reproducible Research / Week 4 / Course Project 2**
+
+#### **Introduction**
+
+- Storms and other severe weather events can cause both public health and economic problems for communities and municipalities. 
+- Many severe events can result in fatalities, injuries, and property damage, and preventing such outcomes to the extent possible is a key concern.
+
+#### **Synopsis**
+- This project involves exploring the U.S. National Oceanic and Atmospheric Administration's (NOAA) storm database. 
+- This database tracks characteristics of major storms and weather events in the United States, including when and where they occur, as well as estimates of any fatalities, injuries, and property damage.
+
+#### **Main Objective**
+- The main objective of this research is to explore the ** NOAA Storm Database ** and find answers with some logic that allow us to understand doubts or questions about ** severe weather events **.
+
+
+### **Data Processing**
+#### **Setting up the environment for R**
+##### **<span style="color:blue">Installing Libraries</span>**
+```{r echo=TRUE, results='hide', warning=FALSE, message=FALSE}
+library(R.utils)
+library(rmarkdown)
+library(knitr)
+library(plyr)
+library(dplyr)
+library(ggplot2)
+library(lattice)
+library(data.table)
+library(grid)
+library(gridExtra)
+```
+##### **<span style="color:blue">Setting up Local Time and Language</span>**
+```{r echo=TRUE, results='hide', warning=FALSE, message=FALSE}
+Sys.setlocale("LC_TIME", "English")
+```
+
+#### Loading and preprocessing the data
+##### **<span style="color:blue">Read the base bz2 file "stormData.csv.bz2" that contains the data</span>**
+```{r, echo = TRUE, results = 'markup', warning = TRUE, message = TRUE}
+
+dataInput_file <- "stormData.csv.bz2"
+if (!file.exists(dataInput_file)) {
+  data_URL <- "https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2"
+  download.file(data_URL, destfile = dataInput_file)
+
+}
+if(!file.exists("stormdata.csv"))
+{
+  bunzip2("stormData.csv.bz2","stormdata.csv",remove=F)
+}
+#stormData <- read.csv("stormdata.csv", header=TRUE,sep=",")
+```
+##### **<span style="color:blue">Activating Cache for storing stormData with Results</span>**
+```{r readin, cache=TRUE, results = 'markup', warning = TRUE, message = TRUE}
+stormData <- read.csv("stormdata.csv", header=TRUE,sep=",")
+
+glimpse(stormData)
+```
+
+
+```{r echo = TRUE, results = 'markup', warning = TRUE, message = TRUE}
+head(stormData)
+names(stormData)
+```
+
+### **<span style="color:green">Results</span>**
+
+
+##### **Question 1 :** 
+- Across the United States, which types of events (as indicated in the EVTYPE variable) are most harmful with respect to population health?
+
+##### **Answer :**
+- To answer this question, it is clear that the main focus is on discovering the variables FATALITIES and INJURIES.
+- It is from these variables that the information to be analyzed and subsequently plotted will be constructed.
+  
+##### **<span style="color:blue">Retrieving and Listing Top 10 EVTYPE "Injuries" Data Elements for this Analysis</span>**
+```{r echo = TRUE, results = 'markup', warning = TRUE, message = TRUE}
+# Reviewing events that cause the most Injuries by Weather Event.
+
+## The Procedure is aggregate the top 10 Injuries by the event type and sort the output in descending order
+
+
+total_injuries <- aggregate(INJURIES~EVTYPE, stormData, sum)
+total_injuries <- arrange(total_injuries, desc(INJURIES))
+total10_injuries <- total_injuries[1:10, ]
+total10_injuries
+```
+
+##### **<span style="color:blue">Retrieving and Listing Top 10 EVTYPE "Fatalities" Data Elements for this Analysis</span>**
+```{r echo = TRUE, results = 'markup', warning = TRUE, message = TRUE}
+# Reviewing events that cause the most fatalities by Weather Event
+
+## The Procedure is aggregate the top 10 fatalities by the event type and sort the output in descending order
+
+total_fatalities <- aggregate(FATALITIES~EVTYPE,stormData, sum)
+total_fatalities <- arrange(total_fatalities, desc(FATALITIES))
+total10_fatalities <- total_fatalities[1:10, ]
+total10_fatalities
+```
+
+
+##### **<span style="color:blue">Plots of Fatalities and Injuries by Events</span>**
+```{r echo = TRUE, results = 'markup', warning = TRUE, message = TRUE}
+#Show plot of fatalities by Event Type
+fatalities_data <- ggplot(total10_fatalities, aes(x = EVTYPE, y = FATALITIES)) + 
+      geom_bar(stat = "identity", fill = "darkmagenta", width = NULL) + 
+      theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+      xlab("Event Type") + ylab("Fatalities") 
+#plot(fatalities_data)
+
+#Show plot of injuries by Event Type
+injuries_data <- ggplot(total10_injuries, aes(x = EVTYPE, y = INJURIES)) + 
+      geom_bar(stat = "identity", fill = "darkred", width = NULL) + 
+      theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+      xlab("Event Type") + ylab("Injuries") 
+
+#plot(injuries_data)
+
+grid.arrange(fatalities_data, injuries_data, ncol=2, nrow=1, bottom = "Figure 1: Comparative Public Health Impact",
+     top = textGrob("Public Health Impact - Fatalities & Injuries from top 10 Weather Events", gp=gpar(fontsize=14,font=3)))
+```
+
+- As can be seen in the previous figure, by far the event responsible for causing more damage in <span style="color:blue">fatalities</span> and <span style="color:blue">injuries</span> is the one corresponding to **<span style="color:red">Tornado</span>**.  
+
+```{css echo=FALSE}
+.custom-inline {
+  color: red;
+  font-weight: 700
+}
+```
+
+
+
+
+##### **Question 2 : **
+- Across the United States, which types of events have the greatest economic consequences?
+
+##### **Answer :**
+- For this question, the analysis is based on the variables Crop (CROPDMG) and Property (PROPDMG) damage.
+- These variables are precisely the ones that provide us with information on the damage regarding Crop and Property because of how it harms people, industries and therefore the United States.
