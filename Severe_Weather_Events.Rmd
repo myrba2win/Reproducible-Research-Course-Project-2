@@ -60,7 +60,7 @@ if(!file.exists("stormdata.csv"))
 }
 #stormData <- read.csv("stormdata.csv", header=TRUE,sep=",")
 ```
-##### **<span style="color:blue">Activating Cache for storing stormData with Results</span>**
+##### **<span style="color:blue">Activating </span><span style="color:red">cache=TRUE</span><span style="color:blue"> for storing stormData with Results</span>**
 ```{r readin, cache=TRUE, results = 'markup', warning = TRUE, message = TRUE}
 stormData <- read.csv("stormdata.csv", header=TRUE,sep=",")
 
