@@ -76,10 +76,10 @@ names(stormData)
 ### **<span style="color:green">Results</span>**
 
 
-##### **Question 1 :** 
+#### **Question 1 :** 
 - Across the United States, which types of events (as indicated in the EVTYPE variable) are most harmful with respect to population health?
 
-##### **Answer :**
+#### **Answer :**
 - To answer this question, it is clear that the main focus is on discovering the variables FATALITIES and INJURIES.
 - It is from these variables that the information to be analyzed and subsequently plotted will be constructed.
   
@@ -142,9 +142,126 @@ grid.arrange(fatalities_data, injuries_data, ncol=2, nrow=1, bottom = "Figure 1:
 
 
 
-##### **Question 2 : **
+#### **Question 2 : **
 - Across the United States, which types of events have the greatest economic consequences?
 
-##### **Answer :**
+#### **Answer :**
 - For this question, the analysis is based on the variables Crop (CROPDMG) and Property (PROPDMG) damage.
 - These variables are precisely the ones that provide us with information on the damage regarding Crop and Property because of how it harms people, industries and therefore the United States.
+
+##### **<span style="color:blue">Data Explorations and Findings</span>**
+- After reviewing the column names, the property damage(PROPDMG) and crop damage(CROPDMG) columns both have another related column titled 'exponents' (i.e - PROPDMGEXP and CROPDMGEXP respectively). 
+- As a result, let's convert the exponent columns into numeric data for the calculation of total property and crop damages encountered.
+
+##### **<span style="color:blue">Definitions and Computing</span>**
+- Property damage exponents for each level listed out & assigned those values for the property exponent data. 
+- Invalid data was excluded by assigning the value as '0'. 
+- Then, the property damage value was calculated by multiplying the property damage and property exponent value.
+
+
+```{r echo = TRUE, results = 'markup', warning = TRUE, message = TRUE}
+
+unique(stormData$PROPDMGEXP)
+```
+
+```{r echo = TRUE, results = 'markup', warning = TRUE, message = TRUE}
+
+# Assigning values for the property exponent stormData 
+stormData$PROPEXP[stormData$PROPDMGEXP == "K"] <- 1000
+stormData$PROPEXP[stormData$PROPDMGEXP == "M"] <- 1e+06
+stormData$PROPEXP[stormData$PROPDMGEXP == ""] <- 1
+stormData$PROPEXP[stormData$PROPDMGEXP == "B"] <- 1e+09
+stormData$PROPEXP[stormData$PROPDMGEXP == "m"] <- 1e+06
+stormData$PROPEXP[stormData$PROPDMGEXP == "0"] <- 1
+stormData$PROPEXP[stormData$PROPDMGEXP == "5"] <- 1e+05
+stormData$PROPEXP[stormData$PROPDMGEXP == "6"] <- 1e+06
+stormData$PROPEXP[stormData$PROPDMGEXP == "4"] <- 10000
+stormData$PROPEXP[stormData$PROPDMGEXP == "2"] <- 100
+stormData$PROPEXP[stormData$PROPDMGEXP == "3"] <- 1000
+stormData$PROPEXP[stormData$PROPDMGEXP == "h"] <- 100
+stormData$PROPEXP[stormData$PROPDMGEXP == "7"] <- 1e+07
+stormData$PROPEXP[stormData$PROPDMGEXP == "H"] <- 100
+stormData$PROPEXP[stormData$PROPDMGEXP == "1"] <- 10
+stormData$PROPEXP[stormData$PROPDMGEXP == "8"] <- 1e+08
+
+# Assigning '0' to invalid exponent stormData
+stormData$PROPEXP[stormData$PROPDMGEXP == "+"] <- 0
+stormData$PROPEXP[stormData$PROPDMGEXP == "-"] <- 0
+stormData$PROPEXP[stormData$PROPDMGEXP == "?"] <- 0
+
+# Calculating the property damage value
+stormData$PROPDMGVAL <- stormData$PROPDMG * stormData$PROPEXP
+```
+
+```{r echo = TRUE, results = 'markup', warning = TRUE, message = TRUE}
+
+unique(stormData$CROPDMGEXP)
+```
+
+```{r echo = TRUE, results = 'markup', warning = TRUE, message = TRUE}
+
+# Assigning values for the crop exponent stormData 
+stormData$CROPEXP[stormData$CROPDMGEXP == "M"] <- 1e+06
+stormData$CROPEXP[stormData$CROPDMGEXP == "K"] <- 1000
+stormData$CROPEXP[stormData$CROPDMGEXP == "m"] <- 1e+06
+stormData$CROPEXP[stormData$CROPDMGEXP == "B"] <- 1e+09
+stormData$CROPEXP[stormData$CROPDMGEXP == "0"] <- 1
+stormData$CROPEXP[stormData$CROPDMGEXP == "k"] <- 1000
+stormData$CROPEXP[stormData$CROPDMGEXP == "2"] <- 100
+stormData$CROPEXP[stormData$CROPDMGEXP == ""] <- 1
+
+# Assigning '0' to invalid exponent stormData
+stormData$CROPEXP[stormData$CROPDMGEXP == "?"] <- 0
+
+# calculating the crop damage 
+stormData$CROPDMGVAL <- stormData$CROPDMG * stormData$CROPEXP
+```
+
+```{r echo = TRUE, results = 'markup', warning = TRUE, message = TRUE}
+
+# Property Damage Summary
+
+# Procedure = aggregate the property damage by the event type and sort the output it in descending order
+
+prop <- aggregate(PROPDMGVAL~EVTYPE,stormData, sum)
+prop <- arrange(prop, desc(PROPDMGVAL))
+prop <- prop[1:10, ]
+prop
+```
+
+```{r echo = TRUE, results = 'markup', warning = TRUE, message = TRUE}
+# Crop Damage Summary
+
+# Procedure = aggregate the crop damage by the event type and sort the output it in descending order
+
+crop <- aggregate(CROPDMGVAL~EVTYPE,stormData, sum)
+crop <- arrange(crop, desc(CROPDMGVAL))
+crop <- crop[1:10, ]
+crop
+```
+
+
+##### **<span style="color:blue">Plots of Damages</span>**
+```{r echo = TRUE, results = 'markup', warning = TRUE, message = TRUE}
+#Show plot of Property Damages by Event Type
+prop_data <- ggplot(prop, aes(x = EVTYPE, y = PROPDMGVAL)) + 
+      geom_bar(stat = "identity", fill = "darkmagenta", width = NULL) + 
+      theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+      xlab("Event Type") + ylab("Property Damages ($)") 
+#plot(fatalities_data)
+
+#Show plot of Crop Damages by Event Type
+crop_data <- ggplot(crop, aes(x = EVTYPE, y = CROPDMGVAL)) + 
+      geom_bar(stat = "identity", fill = "darkred", width = NULL) + 
+      theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+      xlab("Event Type") + ylab("Crop Damages ($)") 
+
+#plot(injuries_data)
+
+grid.arrange(prop_data, crop_data, ncol=2, nrow=1, bottom = "Figure 2: Comparative Damages betweeN Properties and Crops",
+     top = textGrob("Public Damage in $ - Properties and Crops from several Weather Events", gp=gpar(fontsize=14,font=3)))
+```
+
+#### **Summary of Conclusions: **
+- Flooding has resulted in more than double the cost of property/crop damage compared to hurricanes/typhoons. However, the hurricane/typhoon event has only been recorded 88 times, so in terms of cost per event it is extremely costly. Tornado events appear highly again, as it did in terms of population health impact. Extreme heat does not appear despite it having a high health impact, however, drought does appear in the top 10, largely driven by crop damage costs.
+- In conclusion, in terms of total impact on health, tornado events have the biggest adverse effects based on fatalities and injuries. However, in terms of the impact per event, excessive heat has a greater effect. Flooding has the biggest total impact on the economy, based on property and crop damage costs. However, hurricane/typhoon events have a greater cost per event.
